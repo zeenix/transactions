@@ -87,24 +87,48 @@ where
 mod integration {
     use super::*;
 
+    macro_rules! process_transactions {
+        ($input: literal, $expected_output: literal) => {
+            let mut output: Vec<u8> = vec![];
+            run($input.as_bytes(), &mut output);
+            let output = String::from_utf8(output).unwrap();
+            assert_eq!(output, $expected_output);
+        };
+    }
+
     #[test]
     fn simple() {
-        let data = "\
-            type,       client, tx, amount
-            deposit,    1,      1,  1.0
-            deposit,    2,      2,  2.0
-            deposit,    1,      3,  2.0
-            withdrawal, 1,      4,  1.5
-            withdrawal, 2,      5,  3.0\
-        ";
-        let mut output: Vec<u8> = vec![];
-        run(data.as_bytes(), &mut output);
-        let output = String::from_utf8(output).unwrap();
-        const EXPECTED_OUTPUT: &str = "\
-            client,available,held,total,locked\n\
-            1,1.5,0.0,1.5,false\n\
-            2,2.0,0.0,2.0,false\n\
-        ";
-        assert_eq!(output, EXPECTED_OUTPUT);
+        process_transactions!(
+            "type,       client, tx, amount
+             deposit,    1,      1,  1.0
+             deposit,    2,      2,  2.0
+             deposit,    1,      3,  2.0
+             withdrawal, 1,      4,  1.5
+             withdrawal, 2,      5,  3.0\
+            ",
+            "client,available,held,total,locked\n\
+             1,1.5,0.0,1.5,false\n\
+             2,2.0,0.0,2.0,false\n\
+            "
+        );
+    }
+
+    #[test]
+    fn chargeback() {
+        // Transactions with 1 valid chargeback and 1 invalid one (should be ignored).
+        process_transactions!(
+            "type,       client, tx, amount
+             deposit,    77,     1,  1.5
+             deposit,    80,     2,  2.0
+             withdrawal, 77,     3,  1.0
+             dispute,    77,     3,
+             chargeback, 77,     3,
+             chargeback, 80,     5,\
+            ",
+            "client,available,held,total,locked\n\
+            77,-0.5,0.0,-0.5,true\n\
+            80,2.0,0.0,2.0,false\n\
+            "
+        );
     }
 }
