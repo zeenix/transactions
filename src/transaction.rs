@@ -2,9 +2,11 @@ use serde::Deserialize;
 
 // I went for one enum using internally-tagged enum representation as that seemed very natural to
 // use for the problem at hand but after an hour of searching and trying out different things, I
-// found out that internally-tagged enums are not supported by the `csv` crate. :(
+// found out that internally-tagged enums are not supported by the `csv` crate. :( I've submitted
+// a PR to document this limtation.
 //
 //  For details on why: https://github.com/BurntSushi/rust-csv/issues/211
+//  PR: https://github.com/BurntSushi/rust-csv/pull/231
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
