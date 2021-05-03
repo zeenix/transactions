@@ -81,13 +81,13 @@ impl Account {
 
         match tx.r#type {
             TransactionType::Deposit => {
-                let amount = tx.amount.ok_or_else(|| Error::MissingAmount)?;
+                let amount = tx.amount.ok_or(Error::MissingAmount)?;
 
                 self.deposit(amount);
                 self.transactions.insert(tx.tx, tx);
             }
             TransactionType::Withdrawal => {
-                let amount = tx.amount.ok_or_else(|| Error::MissingAmount)?;
+                let amount = tx.amount.ok_or(Error::MissingAmount)?;
 
                 self.withdraw(amount)?;
                 self.transactions.insert(tx.tx, tx);
@@ -97,13 +97,13 @@ impl Account {
                 let mut disputed = self
                     .transactions
                     .get_mut(&tx.tx)
-                    .ok_or_else(|| Error::MissingTransaction)?;
+                    .ok_or(Error::MissingTransaction)?;
                 // FIXME:
                 //
                 // * Ensure disputed transaction is a withdrawal.
                 // * Handle the case of already disputed transaction here.
                 disputed.disputed = true;
-                let amount = disputed.amount.ok_or_else(|| Error::MissingAmount)?;
+                let amount = disputed.amount.ok_or(Error::MissingAmount)?;
 
                 self.hold(amount);
             }
@@ -111,11 +111,11 @@ impl Account {
                 let disputed = self
                     .transactions
                     .get_mut(&tx.tx)
-                    .ok_or_else(|| Error::MissingTransaction)?;
+                    .ok_or(Error::MissingTransaction)?;
                 if !disputed.disputed {
                     return Err(Error::Undisputed);
                 }
-                let amount = disputed.amount.ok_or_else(|| Error::MissingAmount)?;
+                let amount = disputed.amount.ok_or(Error::MissingAmount)?;
 
                 self.release(amount);
             }
@@ -123,11 +123,11 @@ impl Account {
                 let disputed = self
                     .transactions
                     .get_mut(&tx.tx)
-                    .ok_or_else(|| Error::MissingTransaction)?;
+                    .ok_or(Error::MissingTransaction)?;
                 if !disputed.disputed {
                     return Err(Error::Undisputed);
                 }
-                let amount = disputed.amount.ok_or_else(|| Error::MissingAmount)?;
+                let amount = disputed.amount.ok_or(Error::MissingAmount)?;
 
                 self.chargeback(amount);
             }
