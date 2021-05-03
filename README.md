@@ -1,3 +1,5 @@
+![main branch build](https://github.com/zeenix/transactions/actions/workflows/rust.yml/badge.svg?branch=main)
+
 # Transactions
 
 A simple transactions handler, written just for my personal amusement and learning. The main aim of
