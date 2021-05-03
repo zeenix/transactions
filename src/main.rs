@@ -132,4 +132,24 @@ mod integration {
             "
         );
     }
+
+    #[test]
+    fn resolve() {
+        // Transactions with 1 valid dispute resolution and 1 invalid one (should be ignored).
+        process_transactions!(
+            "type,       client, tx, amount
+             deposit,    77,     1,  1.5
+             deposit,    80,     2,  2.0
+             withdrawal, 77,     3,  1.0
+             withdrawal, 80,     4,  1.0
+             dispute,    77,     3,
+             resolve,    77,     3,
+             resolve,    80,     4,
+            ",
+            "client,available,held,total,locked\n\
+            77,0.5,0.0,0.5,false\n\
+            80,1.0,0.0,1.0,false\n\
+            "
+        );
+    }
 }
