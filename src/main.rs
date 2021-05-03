@@ -1,5 +1,11 @@
-use csv::{Reader, ReaderBuilder, Trim, Writer};
-use std::{collections::BTreeMap, env::args, fs::File, io, path::Path, process::exit};
+use csv::{ReaderBuilder, Trim, Writer};
+use std::{
+    collections::BTreeMap,
+    env::args,
+    fs::File,
+    io::{self, Read, Write},
+    process::exit,
+};
 
 mod account;
 mod transaction;
@@ -18,14 +24,27 @@ fn main() {
     }
     // unwrap is fine since we established just above that we've at least 2 args.
     let filename = args.nth(1).unwrap();
-    let mut reader = match reader_from_file(&filename) {
-        Ok(r) => r,
+    let file = match File::open(&filename) {
+        Ok(f) => f,
         Err(e) => {
             eprintln!("Error reading from file: {}", e);
 
             exit(-2);
         }
     };
+
+    run(file, io::stdout());
+}
+
+fn run<R, W>(read: R, write: W)
+where
+    R: Read,
+    W: Write,
+{
+    let mut reader = ReaderBuilder::new()
+        .trim(Trim::All)
+        .flexible(true)
+        .from_reader(read);
 
     // Use a BTreeMap as we want records to be sorted and in general it's more efficient.
     // TODO: Move all this to a separate module/type.
@@ -52,7 +71,7 @@ fn main() {
         }
     }
 
-    let mut writer = Writer::from_writer(io::stdout());
+    let mut writer = Writer::from_writer(write);
     for account in accounts.values() {
         if let Err(e) = writer.serialize(account) {
             eprintln!(
@@ -63,14 +82,3 @@ fn main() {
         }
     }
 }
-
-fn reader_from_file(filename: impl AsRef<Path>) -> io::Result<Reader<File>> {
-    let file = File::open(&filename)?;
-
-    Ok(ReaderBuilder::new()
-        .trim(Trim::All)
-        .flexible(true)
-        .from_reader(file))
-}
-
-// TODO: Add integration tests.
