@@ -136,40 +136,40 @@ impl Account {
 
     /// Deposite `amount` to the account.
     fn deposit(&mut self, amount: f64) {
-        self.available += amount.into();
-        self.total += amount.into();
+        *self.available += amount;
+        *self.total += amount;
     }
 
     /// Withdraw `amount` from the account.
     fn withdraw(&mut self, amount: f64) -> Result<(), Error> {
-        let available = self.available - amount.into();
-        if *available < 0.0 {
+        let available = *self.available - amount;
+        if available < 0.0 {
             return Err(Error::InsufficientFunds);
         }
-        self.available = available;
-        self.total -= amount.into();
+        *self.available = available;
+        *self.total -= amount;
 
         Ok(())
     }
 
     /// Hold `amount` from the account.
     fn hold(&mut self, amount: f64) {
-        self.held += amount.into();
+        *self.held += amount;
         // No requirements specified for insufficient available funds in this case so assuming we
         // can go negative in this case.
-        self.available -= amount.into();
+        *self.available -= amount;
     }
 
     /// Relese `amount` from the account.
     fn release(&mut self, amount: f64) {
-        self.held -= amount.into();
-        self.available += amount.into();
+        *self.held -= amount;
+        *self.available += amount;
     }
 
     /// Chargeback `amount` from the account.
     fn chargeback(&mut self, amount: f64) {
-        self.held -= amount.into();
-        self.total -= amount.into();
+        *self.held -= amount;
+        *self.total -= amount;
         self.locked = true;
     }
 
