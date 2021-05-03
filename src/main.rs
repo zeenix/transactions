@@ -98,6 +98,7 @@ mod integration {
 
     #[test]
     fn simple() {
+        // All valid transactions expept for 1 overdraw request (should be ignored).
         process_transactions!(
             "type,       client, tx, amount
              deposit,    1,      1,  1.0
