@@ -43,8 +43,8 @@ Failed to process a transaction record: Missing referenced transaction record
 
 ## csv issues
 
-While `csv` seems like a nice API, the Serde implementations seem a bit flaky. I encountered two
-issues so far:
+While [`csv`](https://crates.io/crates/csv) seems like a nice API, the Serde implementations
+seem a bit flaky. I encountered two issues so far:
 
 * Internally-tagged enums are not only unsupported, you only find this out through a runtime error
   (and hence think that you're doing something wrong). While it seems the support
