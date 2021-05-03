@@ -70,10 +70,6 @@ impl Account {
         }
     }
 
-    pub(crate) fn client_id(&self) -> u16 {
-        self.client_id
-    }
-
     pub(crate) fn execute_transaction(&mut self, tx: Transaction) -> Result<(), Error> {
         self.ensure_not_frozen()?;
 

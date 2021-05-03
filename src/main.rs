@@ -1,6 +1,4 @@
-use csv::{ReaderBuilder, Trim, Writer};
 use std::{
-    collections::BTreeMap,
     env::args,
     fs::File,
     io::{self, Read, Write},
@@ -8,11 +6,11 @@ use std::{
 };
 
 mod account;
+mod accounts_db;
 mod f64;
 mod transaction;
 
-use account::Account;
-use transaction::Transaction;
+use accounts_db::AccountsDb;
 
 fn main() {
     let mut args = args();
@@ -42,45 +40,10 @@ where
     R: Read,
     W: Write,
 {
-    let mut reader = ReaderBuilder::new()
-        .trim(Trim::All)
-        .flexible(true)
-        .from_reader(read);
-
-    // Use a BTreeMap as we want records to be sorted and in general it's more efficient.
-    // TODO: Move all this to a separate module/type.
-    let mut accounts = BTreeMap::<u16, Account>::new();
-
-    for result in reader.deserialize() {
-        let tx: Transaction = match result {
-            Ok(tx) => tx,
-            Err(e) => {
-                eprintln!("Failed to parse a transaction record: {}", e);
-
-                // Just ignore the transaction then.
-                continue;
-            }
-        };
-
-        // If account doesn't already exist, create one.
-        let account = accounts
-            .entry(tx.client)
-            .or_insert_with_key(|id| Account::new(*id));
-
-        if let Err(e) = account.execute_transaction(tx) {
-            eprintln!("Failed to process a transaction record: {}", e);
-        }
-    }
-
-    let mut writer = Writer::from_writer(write);
-    for account in accounts.values() {
-        if let Err(e) = writer.serialize(account) {
-            eprintln!(
-                "Failed to serialize account with ID {}: {}",
-                account.client_id(),
-                e
-            );
-        }
+    let mut accounts = AccountsDb::new();
+    accounts.process_transactions(read);
+    if let Err(e) = accounts.write(write) {
+        eprintln!("Failed to serialize accounts: {}", e);
     }
 }
 
