@@ -4,6 +4,7 @@ use std::{
     fmt::{self, Display, Formatter},
 };
 
+use crate::f64::F64;
 use crate::transaction::{Transaction, TransactionType};
 
 pub(crate) enum Error {
@@ -38,9 +39,6 @@ impl Display for Error {
     }
 }
 
-// TODO: serialize (and also maybe deserialize) f64 values with a custom function to only display
-// with precision of 4 digits past the decimal.
-
 /// A Client account.
 #[derive(Debug, Default, Serialize)]
 pub struct Account {
@@ -48,11 +46,11 @@ pub struct Account {
     #[serde(rename = "client")]
     client_id: u16,
     /// The funds available to the account holder.
-    available: f64,
+    available: F64,
     /// The funds held (in case of disputes) from the account holder.
-    held: f64,
+    held: F64,
     /// The total funds in this account.
-    total: f64,
+    total: F64,
     /// If the account is locked due to a chargeback.
     locked: bool,
 
@@ -138,40 +136,40 @@ impl Account {
 
     /// Deposite `amount` to the account.
     fn deposit(&mut self, amount: f64) {
-        self.available += amount;
-        self.total += amount;
+        self.available += amount.into();
+        self.total += amount.into();
     }
 
     /// Withdraw `amount` from the account.
     fn withdraw(&mut self, amount: f64) -> Result<(), Error> {
-        let available = self.available - amount;
-        if available < 0.0 {
+        let available = self.available - amount.into();
+        if *available < 0.0 {
             return Err(Error::InsufficientFunds);
         }
         self.available = available;
-        self.total -= amount;
+        self.total -= amount.into();
 
         Ok(())
     }
 
     /// Hold `amount` from the account.
     fn hold(&mut self, amount: f64) {
-        self.held += amount;
+        self.held += amount.into();
         // No requirements specified for insufficient available funds in this case so assuming we
         // can go negative in this case.
-        self.available -= amount;
+        self.available -= amount.into();
     }
 
     /// Relese `amount` from the account.
     fn release(&mut self, amount: f64) {
-        self.held -= amount;
-        self.available += amount;
+        self.held -= amount.into();
+        self.available += amount.into();
     }
 
     /// Chargeback `amount` from the account.
     fn chargeback(&mut self, amount: f64) {
-        self.held -= amount;
-        self.total -= amount;
+        self.held -= amount.into();
+        self.total -= amount.into();
         self.locked = true;
     }
 

@@ -8,6 +8,7 @@ use std::{
 };
 
 mod account;
+mod f64;
 mod transaction;
 
 use account::Account;
@@ -101,15 +102,15 @@ mod integration {
         // All valid transactions expept for 1 overdraw request (should be ignored).
         process_transactions!(
             "type,       client, tx, amount
-             deposit,    1,      1,  1.0
-             deposit,    2,      2,  2.0
+             deposit,    1,      1,  1.00003
+             deposit,    2,      2,  2.1111111
              deposit,    1,      3,  2.0
              withdrawal, 1,      4,  1.5
              withdrawal, 2,      5,  3.0\
             ",
             "client,available,held,total,locked\n\
              1,1.5,0.0,1.5,false\n\
-             2,2.0,0.0,2.0,false\n\
+             2,2.1111,0.0,2.1111,false\n\
             "
         );
     }
